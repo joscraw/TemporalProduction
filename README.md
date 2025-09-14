@@ -23,28 +23,28 @@ This directory contains production-ready configuration files for deploying Tempo
 SSH into your droplet and set up Temporal:
 
 ```bash
-# SSH into your server
-ssh forge@your-server-ip  # or root@your-server-ip
+# SSH into your server (as forge or root)
+ssh forge@your-server-ip
 
-# Clone the repository (use sudo for /opt directory)
-cd /opt
-sudo git clone https://github.com/joscraw/TemporalProduction.git temporal
+# Clone the repository (as regular user first)
+cd ~
+git clone https://github.com/joscraw/TemporalProduction.git temporal-setup
 
-# Run the setup script - THIS HANDLES ALL PERMISSIONS AUTOMATICALLY
+# Move to /opt with proper permissions
+sudo mv temporal-setup /opt/temporal
+
+# Run the setup script (creates temporal user and fixes ALL permissions)
 cd /opt/temporal
 sudo bash scripts/setup-droplet.sh
-
-# The script will:
-# - Create temporal user
-# - Set /opt/temporal ownership to temporal:temporal
-# - Install Docker, firewall, etc.
-# - No manual permission fixes needed!
 ```
 
-**Git permission fix (if needed later):**
-```bash
-sudo git config --global --add safe.directory /opt/temporal
-```
+**What the script does:**
+- Creates `temporal` user
+- Installs Docker and Docker Compose
+- Sets up firewall (ports 22, 80, 443, 7233)
+- Installs Certbot for SSL
+- **Automatically fixes all permissions** (sets /opt/temporal to temporal:temporal)
+- Configures system optimizations
 
 ### 3. Configure Database
 
@@ -91,24 +91,58 @@ openssl rand -hex 32
 # Switch to temporal user
 sudo su - temporal
 
-# Run deployment
+# Go to temporal directory
 cd /opt/temporal
+
+# Run deployment (no sudo needed as temporal user)
 ./scripts/deploy.sh
 ```
 
-### 6. Set Up SSL Certificate (Optional)
+**Note:** The temporal user owns /opt/temporal, so no sudo is needed for git pulls or docker commands.
+
+### 6. Verify Deployment
 
 ```bash
-# As root user
-certbot certonly --standalone -d temporal.yourdomain.com
+# Check all containers are running
+docker compose --env-file .env.production ps
+
+# Test the UI is accessible
+curl -I http://localhost:8080
+```
+
+Access your Temporal instance:
+- **Web UI**: http://your-server-ip
+- **gRPC endpoint**: your-server-ip:7233
+
+### 7. Set Up SSL Certificate (Optional)
+
+**Prerequisites:**
+- Domain name pointing to your server IP
+- Port 80 accessible (temporarily stop nginx: `docker compose --env-file .env.production stop nginx`)
+
+```bash
+# Get SSL certificate (as root or with sudo)
+sudo certbot certonly --standalone -d temporal.yourdomain.com --email your-email@example.com
+
+# Create SSL directory
+sudo mkdir -p /opt/temporal/nginx/ssl
 
 # Link certificates
-ln -s /etc/letsencrypt/live/temporal.yourdomain.com/fullchain.pem /opt/temporal/nginx/ssl/
-ln -s /etc/letsencrypt/live/temporal.yourdomain.com/privkey.pem /opt/temporal/nginx/ssl/
-ln -s /etc/letsencrypt/live/temporal.yourdomain.com/chain.pem /opt/temporal/nginx/ssl/
+sudo ln -s /etc/letsencrypt/live/temporal.yourdomain.com/fullchain.pem /opt/temporal/nginx/ssl/
+sudo ln -s /etc/letsencrypt/live/temporal.yourdomain.com/privkey.pem /opt/temporal/nginx/ssl/
+sudo ln -s /etc/letsencrypt/live/temporal.yourdomain.com/chain.pem /opt/temporal/nginx/ssl/
 
-# Auto-renewal
-certbot renew --dry-run
+# Switch to HTTPS nginx config
+cd /opt/temporal
+sudo sed -i 's/temporal-http.conf/temporal.conf/g' docker-compose.yml
+
+# Restart nginx with SSL
+sudo su - temporal
+cd /opt/temporal
+docker compose --env-file .env.production restart nginx
+
+# Test auto-renewal
+sudo certbot renew --dry-run
 ```
 
 ## Configuration Files
