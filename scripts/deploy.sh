@@ -46,7 +46,9 @@ cd "$DEPLOY_DIR" || error "Failed to change to deployment directory"
 # Load environment variables
 if [ -f .env.production ]; then
     log "Loading environment variables..."
-    export $(grep -v '^#' .env.production | xargs)
+    set -a
+    source .env.production
+    set +a
 else
     error ".env.production file not found!"
 fi

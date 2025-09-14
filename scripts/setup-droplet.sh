@@ -90,10 +90,18 @@ EOF
 
 systemctl restart docker
 
-# Create application directory
-echo "Creating application directory..."
-mkdir -p /opt/temporal
-chown -R temporal:temporal /opt/temporal
+# Set application directory permissions
+echo "Setting application directory permissions..."
+# Directory should already exist from git clone
+if [ -d /opt/temporal ]; then
+    chown -R temporal:temporal /opt/temporal
+    chmod -R 755 /opt/temporal
+    echo "Permissions set for /opt/temporal"
+else
+    echo "Creating /opt/temporal directory..."
+    mkdir -p /opt/temporal
+    chown -R temporal:temporal /opt/temporal
+fi
 
 # Install Certbot for SSL certificates
 echo "Installing Certbot..."

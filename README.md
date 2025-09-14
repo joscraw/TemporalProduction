@@ -20,25 +20,30 @@ This directory contains production-ready configuration files for deploying Tempo
 
 ### 2. Initial Server Setup
 
-SSH into your droplet and clone the repository:
+SSH into your droplet and set up Temporal:
 
 ```bash
-# SSH into your server (as root or user with sudo access)
-ssh root@your-server-ip
-# OR if using a service like Laravel Forge:
-ssh forge@your-server-ip
+# SSH into your server
+ssh forge@your-server-ip  # or root@your-server-ip
 
-# Clone the repository to /opt
+# Clone the repository (use sudo for /opt directory)
 cd /opt
 sudo git clone https://github.com/joscraw/TemporalProduction.git temporal
-# If using SSH: git clone git@github.com:joscraw/TemporalProduction.git temporal
 
-# Fix ownership if needed
-sudo chown -R $USER:$USER /opt/temporal
-
-# Run the setup script
+# Run the setup script - THIS HANDLES ALL PERMISSIONS AUTOMATICALLY
 cd /opt/temporal
 sudo bash scripts/setup-droplet.sh
+
+# The script will:
+# - Create temporal user
+# - Set /opt/temporal ownership to temporal:temporal
+# - Install Docker, firewall, etc.
+# - No manual permission fixes needed!
+```
+
+**Git permission fix (if needed later):**
+```bash
+sudo git config --global --add safe.directory /opt/temporal
 ```
 
 ### 3. Configure Database
