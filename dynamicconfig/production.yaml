@@ -1,0 +1,64 @@
+# Temporal Dynamic Configuration for Production
+# Adjust these values based on your workload
+
+# System limits
+system.forceSearchAttributesCacheRefreshOnRead:
+  - value: true
+
+# Frontend limits
+frontend.maxIDLength:
+  - value: 1000
+frontend.persistenceMaxQPS:
+  - value: 3000
+frontend.persistenceGlobalMaxQPS:
+  - value: 3000
+frontend.rps:
+  - value: 2400
+frontend.globalRPS:
+  - value: 2400
+
+# History service limits
+history.persistenceMaxQPS:
+  - value: 9000
+history.persistenceGlobalMaxQPS:
+  - value: 9000
+history.rps:
+  - value: 2400
+
+# Matching service limits
+matching.persistenceMaxQPS:
+  - value: 9000
+matching.persistenceGlobalMaxQPS:
+  - value: 9000
+matching.rps:
+  - value: 2400
+
+# Worker service limits
+worker.persistenceMaxQPS:
+  - value: 1000
+worker.persistenceGlobalMaxQPS:
+  - value: 1000
+
+# Workflow limits
+limit.maxIDLength:
+  - value: 1000
+limit.maxSearchAttributeValueSize:
+  - value: 2048
+
+# Retention
+history.retentionDays:
+  - value: 30
+
+# Search attributes
+system.searchAttributesNumberOfKeysLimit:
+  - value: 100
+system.searchAttributesSizeOfValueLimit:
+  - value: 2048
+system.searchAttributesTotalSizeLimit:
+  - value: 40960
+
+# Task queue limits
+matching.numTaskqueueReadPartitions:
+  - value: 4
+matching.numTaskqueueWritePartitions:
+  - value: 4
