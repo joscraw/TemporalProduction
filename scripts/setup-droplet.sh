@@ -132,7 +132,7 @@ echo "Installing monitoring tools..."
 wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
 add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
 apt update
-apt install -y prometheus node-exporter
+apt install -y prometheus prometheus-node-exporter
 
 # Setup log rotation
 echo "Configuring log rotation..."
