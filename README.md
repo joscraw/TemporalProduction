@@ -20,37 +20,78 @@ This directory contains production-ready configuration files for deploying Tempo
 
 ### 2. Initial Server Setup
 
-SSH into your droplet as root and run:
+SSH into your droplet and clone the repository:
 
 ```bash
-# Download and run setup script
-wget https://raw.githubusercontent.com/your-repo/temporal-production/main/scripts/setup-droplet.sh
-chmod +x setup-droplet.sh
-./setup-droplet.sh
+# SSH into your server (as root or user with sudo access)
+ssh root@your-server-ip
+# OR if using a service like Laravel Forge:
+ssh forge@your-server-ip
+
+# Clone the repository to /opt
+cd /opt
+sudo git clone https://github.com/joscraw/TemporalProduction.git temporal
+# If using SSH: git clone git@github.com:joscraw/TemporalProduction.git temporal
+
+# Fix ownership if needed
+sudo chown -R $USER:$USER /opt/temporal
+
+# Run the setup script
+cd /opt/temporal
+sudo bash scripts/setup-droplet.sh
 ```
 
-### 3. Deploy Temporal
+### 3. Configure Database
+
+Create a database in DigitalOcean:
+1. Go to your PostgreSQL cluster in DigitalOcean
+2. Click "Users & Databases" tab
+3. Create a new database named `temporal`
+4. Add your droplet to "Trusted Sources" in the Settings tab
+
+### 4. Configure Environment
+
+```bash
+# Edit the production environment file
+cd /opt/temporal
+nano .env.production
+```
+
+Update these values:
+```bash
+POSTGRES_HOST=your-actual-host.db.ondigitalocean.com
+POSTGRES_USER=doadmin
+POSTGRES_PASSWORD=your-actual-password
+POSTGRES_DB=temporal
+DB_PORT=25060
+
+# Use server IP if no domain configured yet
+DOMAIN=your.server.ip.address
+# OR use your domain if you have one
+DOMAIN=temporal.yourdomain.com
+
+# Generate encryption key
+TEMPORAL_ENCRYPTION_KEY=<result of: openssl rand -hex 32>
+```
+
+Generate the encryption key:
+```bash
+openssl rand -hex 32
+# Copy the output and paste it for TEMPORAL_ENCRYPTION_KEY
+```
+
+### 5. Deploy Temporal
 
 ```bash
 # Switch to temporal user
-su - temporal
+sudo su - temporal
 
-# Clone this repository
+# Run deployment
 cd /opt/temporal
-git clone https://github.com/your-repo/temporal-production.git .
-
-# Configure environment
-cp .env.production.example .env.production
-nano .env.production  # Add your database credentials
-
-# Make scripts executable
-chmod +x scripts/*.sh
-
-# Deploy
 ./scripts/deploy.sh
 ```
 
-### 4. Set Up SSL Certificate
+### 6. Set Up SSL Certificate (Optional)
 
 ```bash
 # As root user
@@ -186,17 +227,29 @@ curl http://localhost:8080  # UI endpoint
 
 ### Common Issues
 
-1. **Database Connection Failed**
-   - Check `.env.production` credentials
-   - Verify DigitalOcean database firewall rules
-   - Test with: `psql -h your-db-host -U doadmin -d defaultdb`
+1. **Git Permission Issues**
+   ```bash
+   # If you get "detected dubious ownership"
+   git config --global --add safe.directory /opt/temporal
+   # OR
+   sudo git config --global --add safe.directory /opt/temporal
 
-2. **Out of Memory**
+   # If you get "Permission denied" on git pull
+   sudo chown -R $USER:$USER /opt/temporal
+   ```
+
+2. **Database Connection Failed**
+   - Check `.env.production` credentials
+   - Verify DigitalOcean database firewall rules (add droplet to Trusted Sources)
+   - Ensure database name is `temporal`
+   - Test with: `psql -h your-db-host -U doadmin -d temporal`
+
+3. **Out of Memory**
    - Check Docker resource limits
    - Monitor with: `docker stats`
    - Consider upgrading droplet
 
-3. **SSL Certificate Issues**
+4. **SSL Certificate Issues**
    - Verify domain DNS points to droplet
    - Check certificate: `certbot certificates`
    - Renew manually: `certbot renew`
