@@ -57,8 +57,11 @@ Create a database in DigitalOcean:
 ### 4. Configure Environment
 
 ```bash
-# Edit the production environment file
+# Switch to temporal user FIRST (they own the directory)
+sudo su - temporal
 cd /opt/temporal
+
+# Now edit as temporal user (no sudo needed)
 nano .env.production
 ```
 
@@ -88,13 +91,8 @@ openssl rand -hex 32
 ### 5. Deploy Temporal
 
 ```bash
-# Switch to temporal user
-sudo su - temporal
-
-# Go to temporal directory
-cd /opt/temporal
-
-# Run deployment (no sudo needed as temporal user)
+# Already as temporal user from previous step
+# Just run deployment
 ./scripts/deploy.sh
 ```
 
