@@ -68,7 +68,7 @@ docker run --rm \
 
 # Pull latest images
 log "Pulling latest Docker images..."
-docker compose pull
+docker compose --env-file .env.production pull
 
 # Backup current deployment if exists
 if [ -f docker-compose.yml ]; then
@@ -85,8 +85,8 @@ health_check() {
     local attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if docker compose ps --services --filter "status=running" | grep -q "^$service$"; then
-            if docker compose exec -T "$service" temporal health-check 2>/dev/null; then
+        if docker compose --env-file .env.production ps --services --filter "status=running" | grep -q "^$service$"; then
+            if docker compose --env-file .env.production exec -T "$service" temporal health-check 2>/dev/null; then
                 return 0
             fi
         fi
@@ -97,26 +97,26 @@ health_check() {
 }
 
 # Deploy with zero-downtime if already running
-if docker compose ps --services --filter "status=running" 2>/dev/null | grep -q temporal; then
+if docker compose --env-file .env.production ps --services --filter "status=running" 2>/dev/null | grep -q temporal; then
     log "Performing rolling update..."
 
     # Start new containers alongside old ones
-    docker compose up -d --no-deps --scale temporal=2 temporal
+    docker compose --env-file .env.production up -d --no-deps --scale temporal=2 temporal
 
     # Wait for new container to be healthy
     sleep 10
     if health_check temporal; then
         log "New Temporal container is healthy"
         # Remove old container
-        docker compose up -d --no-deps --remove-orphans temporal
+        docker compose --env-file .env.production up -d --no-deps --remove-orphans temporal
     else
         warning "Health check failed, rolling back..."
-        docker compose down
-        docker compose up -d
+        docker compose --env-file .env.production down
+        docker compose --env-file .env.production up -d
     fi
 else
     log "Starting Temporal services..."
-    docker compose up -d
+    docker compose --env-file .env.production up -d
 
     # Wait for services to be ready
     log "Waiting for services to be ready..."
@@ -131,7 +131,7 @@ fi
 
 # Show service status
 log "Service status:"
-docker compose ps
+docker compose --env-file .env.production ps
 
 # Verify Temporal is accessible
 log "Verifying Temporal accessibility..."

@@ -3,34 +3,26 @@ version: "3.8"
 services:
   temporal:
     container_name: temporal-server
-    image: temporalio/server:latest
+    image: temporalio/auto-setup:latest
     depends_on:
       - elasticsearch
     environment:
-      # Database Configuration (Using DigitalOcean Managed PostgreSQL)
+      # Database Configuration
       - DB=postgresql
       - DB_PORT=${DB_PORT}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=${POSTGRES_HOST}
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_MAX_CONNS=20
-      - SQL_MAX_CONNS=20
 
       # Elasticsearch Configuration
       - ENABLE_ES=true
       - ES_SEEDS=elasticsearch
       - ES_VERSION=v7
 
-      # Temporal Configuration
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CLI_ADDRESS=temporal:7233
-      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/production.yaml
-      - LOG_LEVEL=info
-      - NUM_HISTORY_SHARDS=512
-
       # Service Configuration
       - SERVICES=frontend,matching,history,worker
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/production.yaml
 
     ports:
       - "7233:7233"  # gRPC port for workers/clients
