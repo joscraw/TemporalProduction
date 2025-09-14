@@ -13,7 +13,11 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=${POSTGRES_HOST}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - DBNAME=${POSTGRES_DB}
+      - POSTGRES_TLS_ENABLED=true
+      - POSTGRES_TLS_DISABLE_HOST_VERIFICATION=true
+      - SQL_TLS_ENABLED=true
+      - SQL_TLS_DISABLE_HOST_VERIFICATION=true
 
       # Elasticsearch Configuration
       - ENABLE_ES=true
