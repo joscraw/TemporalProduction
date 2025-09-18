@@ -315,3 +315,10 @@ For issues specific to:
 - **Temporal**: https://community.temporal.io/
 - **DigitalOcean**: https://www.digitalocean.com/support/
 - **This deployment**: Create an issue in your repository
+
+
+
+## DOCKER MUST BE STARTED LIKE THIS:
+
+docker compose --env-file .env.production up -d
+
